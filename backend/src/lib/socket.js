@@ -5,9 +5,12 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
-
-const io = new Server(server, { cors: { origin: [allowedOrigin] } });
+const io = new Server(server, {
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+});
 
 function getReceiverSocketId(userId) {
   return userSocketMap[userId];
@@ -21,10 +24,8 @@ io.on("connection", (socket) => {
 
   if (userId) userSocketMap[userId] = socket.id;
 
-  // io.emit() sends event to everyone - broadcast
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  // socket.on is used to listen for events
   socket.on("disconnect", () => {
     if (userId) delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
